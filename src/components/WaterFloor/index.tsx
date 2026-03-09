@@ -54,13 +54,11 @@ const FRAG = /* glsl */ `
   uniform float uRippleTimes[8];
   uniform int   uRippleCount;
   uniform float uRippleSpeed;
-  uniform float uRippleAtten;
+  uniform float uRippleWidth;    // ring thickness in world units
   uniform float uRippleStrength;
   uniform float uRippleDecay;
-  uniform float uRippleWaves;    // angular frequency for ring distortion
-  uniform float uRippleNoise;    // distortion amplitude
-  uniform int   uRippleRings;    // concentric rings per event
-  uniform float uRippleSpacing;  // time offset between concentric rings
+  uniform int   uRippleRings;
+  uniform float uRippleSpacing;
 
   varying vec2 vWorldPos;
 
@@ -165,29 +163,22 @@ const FRAG = /* glsl */ `
       inSeg1
     );
 
-    // ── Ripple rings — expanding gaussian ring per impact event ───────────────
-    // Multiple concentric rings with angular distortion per impact event.
+    // ── Ripple rings — hard-edged anime rings per impact event ────────────────
     float rippleAcc = 0.0;
     for (int i = 0; i < 8; i++) {
       float isOn    = step(float(i), float(uRippleCount) - 0.5);
       float elapsed = max(uTime - uRippleTimes[i], 0.0);
+      float d       = length(vWorldPos - uRippleCenters[i]);
 
-      // Distorted distance: add angular harmonics that fade as ring expands
-      vec2  toFrag  = vWorldPos - uRippleCenters[i];
-      float d       = length(toFrag);
-      float angle   = atan(toFrag.y, toFrag.x);
-      float distort = sin(angle * uRippleWaves) * 0.65
-                    + sin(angle * uRippleWaves * 2.3 + elapsed * 2.0) * 0.35;
-      float noisyD  = d + distort * uRippleNoise * exp(-elapsed * uRippleDecay * 0.35);
-
-      // Inner loop: concentric rings offset in time
       for (int r = 0; r < 4; r++) {
-        float rIsOn = step(float(r), float(uRippleRings) - 0.5);
-        float rOff  = float(r) * uRippleSpacing;
-        float re    = max(elapsed - rOff, 0.0);
-        float ring  = exp(-pow(noisyD - re * uRippleSpeed, 2.0) * uRippleAtten);
-        float rfade = exp(-re * uRippleDecay);
-        rippleAcc  += ring * rfade * isOn * rIsOn;
+        float rIsOn    = step(float(r), float(uRippleRings) - 0.5);
+        float re       = max(elapsed - float(r) * uRippleSpacing, 0.0);
+        float ringR    = re * uRippleSpeed;
+        // Hard step ring: sharp inner + sharp outer edge (anime style)
+        float ringDist = abs(d - ringR);
+        float ring     = 1.0 - smoothstep(0.0, uRippleWidth, ringDist);
+        float fade     = exp(-re * uRippleDecay);
+        rippleAcc     += ring * fade * isOn * rIsOn;
       }
     }
     float ripple = clamp(rippleAcc * uRippleStrength, 0.0, 1.0);
@@ -231,14 +222,6 @@ export default function WaterFloor({ deepOpacityOverride }: WaterFloorProps) {
     deepOpacity,
     fadeDistance,
     fadeStrength,
-    rippleSpeed,
-    rippleAtten,
-    rippleStrength,
-    rippleDecay,
-    rippleWaves,
-    rippleNoise,
-    rippleRings,
-    rippleSpacing,
   } = useControls(
     "Water Floor",
     {
@@ -260,16 +243,6 @@ export default function WaterFloor({ deepOpacityOverride }: WaterFloorProps) {
       deepOpacity:    { value: 0.37,  min: 0,    max: 1,    step: 0.01,  label: "Deep Opacity" },
       fadeDistance:   { value: 275,    min: 10,   max: 300,  step: 5,     label: "Fade Distance" },
       fadeStrength:   { value: 1.3,   min: 0.1,  max: 5,    step: 0.1,   label: "Fade Strength" },
-      Ripples: folder({
-        rippleSpeed:    { value: 1.5,  min: 0.1,  max: 20,   step: 0.1,  label: "Ring Speed" },
-        rippleAtten:    { value: 60, min: 0.1,  max: 60,   step: 0.1,  label: "Ring Width" },
-        rippleStrength: { value: 5.5,  min: 0,    max: 8,    step: 0.1,  label: "Strength" },
-        rippleDecay:    { value: 1.60,  min: 0.05, max: 5,    step: 0.05, label: "Decay Speed" },
-        rippleRings:    { value: 2,    min: 1,    max: 4,    step: 1,    label: "Ring Count" },
-        rippleSpacing:  { value: 1.03, min: 0.05, max: 2,    step: 0.05, label: "Ring Spacing" },
-        rippleWaves:    { value: 5,    min: 1,    max: 20,   step: 1,    label: "Wave Freq" },
-        rippleNoise:    { value: 0.05, min: 0,    max: 2,    step: 0.05, label: "Distortion" },
-      }, { collapsed: false }),
     },
     { collapsed: true }
   );
@@ -303,18 +276,16 @@ export default function WaterFloor({ deepOpacityOverride }: WaterFloorProps) {
           uFadeDistance:    { value: 90.0 },
           uFadeStrength:    { value: 1.4 },
           uCamXZ:           { value: new THREE.Vector2() },
-          // ripple uniforms — count=0 means all slots inactive
-          uRippleCenters:   { value: Array.from({ length: 8 }, () => new THREE.Vector2()) },
-          uRippleTimes:     { value: new Array(8).fill(0) },
-          uRippleCount:     { value: 0 },
-          uRippleSpeed:     { value: 3.8 },
-          uRippleAtten:     { value: 26.8 },
-          uRippleStrength:  { value: 4.0 },
-          uRippleDecay:     { value: 5.0 },
-          uRippleWaves:     { value: 5.0 },
-          uRippleNoise:     { value: 0.35 },
-          uRippleRings:     { value: 3 },
-          uRippleSpacing:   { value: 0.28 },
+          // ripple uniforms — visual config comes from rippleStore (set by useWaterRipple)
+          uRippleCenters:  { value: Array.from({ length: 8 }, () => new THREE.Vector2()) },
+          uRippleTimes:    { value: new Array(8).fill(0) },
+          uRippleCount:    { value: 0 },
+          uRippleSpeed:    { value: 1.5 },
+          uRippleWidth:    { value: 0.12 },
+          uRippleStrength: { value: 5.5 },
+          uRippleDecay:    { value: 1.6 },
+          uRippleRings:    { value: 2 },
+          uRippleSpacing:  { value: 1.0 },
         },
       }),
     []
@@ -346,15 +317,14 @@ export default function WaterFloor({ deepOpacityOverride }: WaterFloorProps) {
     u.uFadeStrength.value   = fadeStrength;
     u.uCamXZ.value.set(camera.position.x, camera.position.z);
 
-    // ── Ripple sync ──────────────────────────────────────────────────────────
-    u.uRippleSpeed.value    = rippleSpeed;
-    u.uRippleAtten.value    = rippleAtten;
-    u.uRippleStrength.value = rippleStrength;
-    u.uRippleDecay.value    = rippleDecay;
-    u.uRippleWaves.value    = rippleWaves;
-    u.uRippleNoise.value    = rippleNoise;
-    u.uRippleRings.value    = rippleRings;
-    u.uRippleSpacing.value  = rippleSpacing;
+    // ── Ripple sync — visual config comes from rippleStore (set by useWaterRipple) ──
+    const cfg = rippleStore.getConfig();
+    u.uRippleSpeed.value    = cfg.speed;
+    u.uRippleWidth.value    = cfg.width;
+    u.uRippleStrength.value = cfg.strength;
+    u.uRippleDecay.value    = cfg.decay;
+    u.uRippleRings.value    = cfg.rings;
+    u.uRippleSpacing.value  = cfg.spacing;
     const ripples = rippleStore.get();
     u.uRippleCount.value    = ripples.length;
     for (let i = 0; i < ripples.length; i++) {

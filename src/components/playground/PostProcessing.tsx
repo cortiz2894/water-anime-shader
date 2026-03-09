@@ -9,7 +9,7 @@ export default function PostProcessing() {
     {
       mipmapBlur: { value: true,  label: "Mipmap Blur" },
       intensity:  { value: 1.1,  min: 0, max: 10, step: 0.05, label: "Intensity" },
-      radius:     { value: 0.75,  min: 0, max: 1,  step: 0.01, label: "Radius" },
+      radius:     { value: 0.65,  min: 0, max: 1,  step: 0.01, label: "Radius" },
       threshold:  { value: 0.33,   min: 0, max: 3,  step: 0.01, label: "Threshold" },
     }
   );

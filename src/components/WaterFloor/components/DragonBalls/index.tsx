@@ -133,17 +133,29 @@ export function DragonBalls() {
   const { nodes, materials } = useGLTF("/assets/dragon-balls-model.glb");
   const groupRef = useRef<Group>(null!);
 
+  // Clone Star material so we don't mutate the shared GLTF cache
+  const starMat = useMemo(() => {
+    const mat = (materials.Star as THREE.MeshStandardMaterial).clone();
+    return mat;
+  }, [materials.Star]);
+
+  useEffect(() => () => starMat.dispose(), [starMat]);
+
   // ── Leva controls ──────────────────────────────────────────────────────────
-  const { posX, posY, posZ, scale } = useControls(
+  const { posX, posY, posZ, scale, starColor, starEmissive, starEmissiveIntensity } = useControls(
     "Dragon Balls",
     {
-      
       Position: folder({
         posX: { value: 0.25,  min: -20, max: 20, step: 0.05, label: "X" },
         posY: { value: 1.10,  min: -5,  max: 10, step: 0.05, label: "Y" },
         posZ: { value: -1.80, min: -20, max: 20, step: 0.05, label: "Z" },
       }, { collapsed: false }),
       scale: { value: 5.15, min: 0.1, max: 15, step: 0.05, label: "Scale" },
+      Stars: folder({
+        starColor:             { value: "#ffffff",  label: "Color" },
+        starEmissive:          { value: "#ffffff",  label: "Emissive" },
+        starEmissiveIntensity: { value: 7.0, min: 0, max: 10, step: 0.1, label: "Emissive Intensity" },
+      }, { collapsed: false }),
     },
     { collapsed: false }
   );
@@ -158,17 +170,17 @@ export function DragonBalls() {
     "Glass Ball",
     {
       Glass: folder({
-        glassColor:   { value: "#ff6900",  label: "Glass Color" },
-        glassOpacity: { value: 0.72, min: 0, max: 1, step: 0.01, label: "Opacity (above)" },
+        glassColor:   { value: "#de7d2f",  label: "Glass Color" },
+        glassOpacity: { value: 0.85, min: 0, max: 1, step: 0.01, label: "Opacity (above)" },
       }, { collapsed: false }),
       Underwater: folder({
-        underwaterColor:   { value: "#55afeb",  label: "Underwater Color" },
+        underwaterColor:   { value: "#00121d",  label: "Underwater Color" },
         underwaterOpacity: { value: 0.81, min: 0, max: 1, step: 0.01, label: "Opacity (below)" },
       }, { collapsed: false }),
       Fresnel: folder({
-        fresnelPower:    { value: 4.3,       min: 0.5, max: 8,  step: 0.1,  label: "Power" },
-        fresnelStrength: { value: 3.0,       min: 1,   max: 5,  step: 0.05, label: "Strength" },
-        fresnelColor:    { value: "#ffe083",                                 label: "Rim Color" },
+        fresnelPower:    { value: 2.7,       min: 0.5, max: 8,  step: 0.1,  label: "Power" },
+        fresnelStrength: { value: 3.65,       min: 1,   max: 5,  step: 0.05, label: "Strength" },
+        fresnelColor:    { value: "#ffc900",                                 label: "Rim Color" },
       }, { collapsed: true }),
       Roughness: folder({
         roughness: { value: 0.0, min: 0, max: 1, step: 0.01, label: "Roughness (0 = shiny glass)" },
@@ -189,7 +201,7 @@ export function DragonBalls() {
         vertexShader:   GLASS_VERT,
         fragmentShader: GLASS_FRAG,
         transparent:    true,
-        depthWrite:     false,
+        depthWrite:     true,
         side:           THREE.FrontSide,
         uniforms: {
           uTime:              { value: 0 },
@@ -219,6 +231,11 @@ export function DragonBalls() {
     dragonBallsStore.posZ  = posZ;
     dragonBallsStore.scale = scale;
 
+    // ── Sync Star material ─────────────────────────────────────────────────
+    starMat.color.set(starColor);
+    starMat.emissive.set(starEmissive);
+    starMat.emissiveIntensity = starEmissiveIntensity;
+
     // ── Sync shader uniforms ───────────────────────────────────────────────
     const u = glassMat.uniforms;
     u.uTime.value              = clock.getElapsedTime();
@@ -244,10 +261,11 @@ export function DragonBalls() {
       dispose={null}
     >
       {/* Opaque rock base */}
-      <mesh castShadow geometry={nodes.Object_0_2.geometry} material={materials.DefaultMaterial} />
+      <mesh castShadow  geometry={nodes.Object_0_2.geometry} 
+      material={materials.DefaultMaterial} />
 
-      {/* Stars — keep original material, render before water */}
-      <mesh castShadow renderOrder={1} geometry={nodes.Object_0_1.geometry} material={materials.Star} />
+      {/* Stars — cloned material with Leva color + emissive controls */}
+      <mesh geometry={nodes.Object_0_1.geometry} material={starMat} />
 
       {/* Glass spheres — custom shader with world-space water line */}
       <mesh castShadow renderOrder={1} geometry={nodes.Object_0.geometry} material={glassMat} />

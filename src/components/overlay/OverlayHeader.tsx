@@ -49,7 +49,7 @@ export default function OverlayHeader({ mode }: { mode: SceneMode }) {
           margin: 0,
         }}
       >
-        THREEJS BOILERPLATE
+        WATER ANIME STYLE
       </h1>
 
       {/* Designation subtitle */}
@@ -64,7 +64,7 @@ export default function OverlayHeader({ mode }: { mode: SceneMode }) {
           marginTop: 4,
         }}
       >
-        3D PLAYGROUND ENVIRONMENT
+         Water caustics with object intersaction
       </div>
 
       {/* Rev / Date metadata */}

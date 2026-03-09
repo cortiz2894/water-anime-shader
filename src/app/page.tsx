@@ -94,10 +94,10 @@ export default function Home() {
         </div>
         <div ref={ruleRef} className={styles.rule} />
         <h1 ref={titleRef} className={styles.title}>
-          THREEJS BOILERPLATE
+          WATER CAUSTICS ANIME
         </h1>
         <div ref={subtitleRef} className={styles.subtitle}>
-          Creative Development Starter Kit
+          Water caustics with object intersaction
         </div>
       </header>
 

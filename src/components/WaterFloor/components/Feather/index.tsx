@@ -30,25 +30,26 @@ export function Feather() {
 
   useEffect(() => () => featherMat.dispose(), [featherMat]);
 
-  const { posX, posY, posZ, scale, rotY, rippleRadius } = useControls(
+  const { posX, posY, posZ, scale, rotY, rippleRadius, rippleInterval } = useControls(
     "Feather",
     {
       Position: folder(
         {
           posX: { value: -4.30, min: -20,  max: 20,  step: 0.05, label: "X" },
-          posY: { value:  0.1, min: -5,   max: 10,  step: 0.05, label: "Y" },
+          posY: { value:  0.05, min: -5,   max: 10,  step: 0.05, label: "Y" },
           posZ: { value: -1.75, min: -20,  max: 20,  step: 0.05, label: "Z" },
         },
         { collapsed: false }
       ),
-      scale:        { value: 9.30, min: 0.1,  max: 100, step: 0.05, label: "Scale" },
-      rotY:         { value: -27,  min: -180, max: 180, step: 1,    label: "Rotation Y" },
-      rippleRadius: { value: 0.3,  min: 0.05, max: 3,   step: 0.05, label: "Ripple Radius" },
+      scale:          { value: 9.30, min: 0.1,  max: 100, step: 0.05, label: "Scale" },
+      rotY:           { value: -27,  min: -180, max: 180, step: 1,    label: "Rotation Y" },
+      rippleRadius:   { value: 0.1,  min: 0.05, max: 3,   step: 0.05, label: "Ripple Radius" },
+      rippleInterval: { value: 2.3,  min: 0.2,  max: 5,   step: 0.1,  label: "Ripple Interval (s)" },
     },
     { collapsed: false }
   );
 
-  useWaterRipple(groupRef, { radius: rippleRadius, periodicInterval: 3.0 });
+  useWaterRipple(groupRef, { radius: rippleRadius, periodicInterval: rippleInterval });
 
   // Gentle water-drift animation: two sine waves per axis for organic motion.
   // useFrame owns position+rotation so Leva values stay as the resting anchor.
