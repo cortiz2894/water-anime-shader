@@ -90,7 +90,7 @@ const FRAG = /* glsl */ `
 `;
 
 export default function WaterDepthIntersection() {
-  const { size } = useThree();
+  const { size, gl: glState } = useThree();
   const { nodes } = useGLTF("/assets/dragon-balls-model.glb") as {
     nodes: Record<string, THREE.Mesh>;
   };
@@ -116,15 +116,19 @@ export default function WaterDepthIntersection() {
       { collapsed: true }
     );
 
-  // ── Depth render target (matches canvas resolution) ───────────────────────
-  // Recreated when canvas resizes so screenUV maths stay exact.
+  // ── Depth render target (physical pixels = CSS size × DPR) ───────────────
+  // Must use physical pixels so gl_FragCoord (always physical) aligns with
+  // the depth texture sample — otherwise DPR > 1 shifts the intersection.
   const depthRT = useMemo(() => {
-    const rt = new THREE.WebGLRenderTarget(size.width, size.height);
-    rt.depthTexture = new THREE.DepthTexture(size.width, size.height);
+    const dpr = glState.getPixelRatio();
+    const w   = Math.round(size.width  * dpr);
+    const h   = Math.round(size.height * dpr);
+    const rt  = new THREE.WebGLRenderTarget(w, h);
+    rt.depthTexture      = new THREE.DepthTexture(w, h);
     rt.depthTexture.type = THREE.UnsignedShortType;
     return rt;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.width, size.height]);
+  }, [size.width, size.height, glState]);
 
   useEffect(() => () => { depthRT.dispose(); }, [depthRT]);
 
@@ -190,9 +194,11 @@ export default function WaterDepthIntersection() {
     }
 
     // 3. Sync uniforms to intersection plane shader
+    // Use drawing buffer dimensions (physical pixels) to match gl_FragCoord.
     const u = material.uniforms;
     u.uDepthTex.value    = depthRT.depthTexture;
-    u.uResolution.value.set(frameSize.width, frameSize.height);
+    const dpr = gl.getPixelRatio();
+    u.uResolution.value.set(frameSize.width * dpr, frameSize.height * dpr);
     u.uNear.value        = camera.near;
     u.uFar.value         = camera.far;
     u.uLineWidth.value   = lineWidth;
