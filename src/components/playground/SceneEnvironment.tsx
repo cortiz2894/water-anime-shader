@@ -21,7 +21,7 @@ export default function SceneEnvironment({ mode }: { mode: SceneMode }) {
     "Environment",
     {
       preset: {
-        value: "studio" as EnvPreset,
+        value: "park" as EnvPreset,
         options: [
           "apartment",
           "city",

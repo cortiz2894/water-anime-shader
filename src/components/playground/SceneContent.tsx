@@ -5,8 +5,10 @@ import SceneCamera from "./SceneCamera";
 import SceneLighting from "./SceneLighting";
 import SceneEnvironment from "./SceneEnvironment";
 import GridFloor from "./GridFloor";
-import DemoSphere from "./DemoSphere";
 import GlbModel from "./GlbModel";
+import PostProcessing from "./PostProcessing";
+import { DragonBalls } from "../WaterFloor/components/DragonBalls";
+import { Feather } from "../WaterFloor/components/Feather";
 
 export type SceneMode = "Background" | "Frame";
 
@@ -24,13 +26,13 @@ export default function SceneContent({ showGrid, mode, glbUrl, onModelLoaded }: 
       <SceneLighting />
       <SceneEnvironment mode={mode} />
       {showGrid && <GridFloor mode={mode} />}
-      {glbUrl ? (
-        <Suspense fallback={null}>
-          <GlbModel url={glbUrl} onLoaded={onModelLoaded} mode={mode} />
-        </Suspense>
-      ) : (
-        <DemoSphere mode={mode} />
-      )}
+      <Suspense fallback={null}>
+        <DragonBalls />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Feather />
+      </Suspense>
+      <PostProcessing />
     </>
   );
 }
