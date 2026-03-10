@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import type { SceneMode } from "./SceneContent";
-import { useWaterRipple } from "../WaterFloor/useWaterRipple";
+import { useWaterRipple } from "../WaterFloor/hooks/useWaterRipple";
 
 const SPHERE_RADIUS = 0.8;
 const BOB_CENTER    = -0.2;

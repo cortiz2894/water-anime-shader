@@ -6,10 +6,13 @@ import { useFrame } from "@react-three/fiber";
 import { useControls, folder } from "leva";
 import * as THREE from "three";
 import type { Group } from "three";
-import { useWaterRipple } from "../../useWaterRipple";
+import { useWaterRipple } from "../../hooks/useWaterRipple";
 
 export function Feather() {
-  const { nodes, materials } = useGLTF("/assets/feather.glb");
+  const { nodes, materials } = useGLTF("/assets/feather.glb") as unknown as {
+    nodes: Record<string, THREE.Mesh>;
+    materials: Record<string, THREE.Material>;
+  };
   const groupRef = useRef<Group>(null!);
 
   // Clone the material so we don't mutate the shared GLTF cache.

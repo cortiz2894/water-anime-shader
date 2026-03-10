@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Object3D } from "three";
-import { rippleStore, type RippleConfig } from "./rippleStore";
+import { rippleStore, type RippleConfig } from "../stores/rippleStore";
 
 const WATER_Y = -0.1; // must match WaterFloor mesh position Y
 

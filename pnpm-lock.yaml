@@ -44,6 +44,9 @@ importers:
       three:
         specifier: ^0.182.0
         version: 0.182.0
+      three-stdlib:
+        specifier: ^2.36.1
+        version: 2.36.1(three@0.182.0)
       unicornstudio-react:
         specifier: ^1.5.2
         version: 1.5.2(next@16.1.1)(react-dom@19.2.3)(react@19.2.3)

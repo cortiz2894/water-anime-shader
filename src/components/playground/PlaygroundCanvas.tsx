@@ -12,7 +12,7 @@ import LoadingOverlay from "@/components/overlay/LoadingOverlay";
 
 export default function PlaygroundCanvas() {
   const [showGrid, setShowGrid] = useState(true);
-  const [hideLeva, setHideLeva] = useState(false);
+  const [hideLeva, setHideLeva] = useState(true);
   const [glbUrl, setGlbUrl] = useState<string | null>(null);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const glbUrlRef = useRef<string | null>(null);
@@ -58,7 +58,7 @@ export default function PlaygroundCanvas() {
           shadows
           camera={{ position: [8, 6, 8], fov: 50, near: 0.1, far: 200 }}
           gl={{ antialias: true, alpha: false }}
-          dpr={2}
+          dpr={1}
           style={{ background: "#011851" }}
         >
           <SceneContent showGrid={showGrid} mode={mode} glbUrl={glbUrl} onModelLoaded={handleModelLoaded} />

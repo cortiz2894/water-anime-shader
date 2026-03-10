@@ -6,7 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import { useControls, folder } from "leva";
 import * as THREE from "three";
 import type { Group } from "three";
-import { dragonBallsStore } from "../../dragonBallsStore";
+import { useWaterObject } from "../../hooks/useWaterObject";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GlassBall ShaderMaterial
@@ -130,7 +130,10 @@ const GLASS_FRAG = /* glsl */ `
 `;
 
 export function DragonBalls() {
-  const { nodes, materials } = useGLTF("/assets/dragon-balls-model.glb");
+  const { nodes, materials } = useGLTF("/assets/dragon-balls-model.glb") as unknown as {
+    nodes: Record<string, THREE.Mesh>;
+    materials: Record<string, THREE.Material>;
+  };
   const groupRef = useRef<Group>(null!);
 
   // Clone Star material so we don't mutate the shared GLTF cache
@@ -224,13 +227,13 @@ export function DragonBalls() {
 
   useEffect(() => () => glassMat.dispose(), [glassMat]);
 
-  useFrame(({ clock }) => {
-    // ── Sync transform to store ────────────────────────────────────────────
-    dragonBallsStore.posX  = posX;
-    dragonBallsStore.posY  = posY;
-    dragonBallsStore.posZ  = posZ;
-    dragonBallsStore.scale = scale;
+  // ── Register with water effects (depth intersection + wave simulation) ────
+  useWaterObject("dragon-balls", groupRef, [
+    nodes.Object_0.geometry,
+    nodes.Object_0_2.geometry,
+  ]);
 
+  useFrame(({ clock }) => {
     // ── Sync Star material ─────────────────────────────────────────────────
     starMat.color.set(starColor);
     starMat.emissive.set(starEmissive);
@@ -261,7 +264,7 @@ export function DragonBalls() {
       dispose={null}
     >
       {/* Opaque rock base */}
-      <mesh castShadow  geometry={nodes.Object_0_2.geometry} 
+      <mesh castShadow  geometry={nodes.Object_0_2.geometry}
       material={materials.DefaultMaterial} />
 
       {/* Stars — cloned material with Leva color + emissive controls */}

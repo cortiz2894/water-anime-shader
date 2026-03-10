@@ -2,8 +2,10 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useControls, folder } from "leva";
 import * as THREE from "three";
+import { VERT } from "./shaders/vertex";
+import { FRAG } from "./shaders/fragment";
+import { useWaterSparklesControls } from "./utils/controls";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WaterSparkles — procedural 4-pointed star sparkles on the water surface.
@@ -18,55 +20,7 @@ import * as THREE from "three";
 
 const MAX_COUNT = 500;
 
-const VERT = /* glsl */ `
-  attribute float aLifetime;
-  attribute float aMaxLifetime;
-  attribute float aSize;
-
-  varying float vAlpha;
-
-  void main() {
-    float t = clamp(aLifetime / aMaxLifetime, 0.0, 1.0);
-    // Smooth fade-in / fade-out using a sine curve over [0, PI]
-    vAlpha = sin(t * 3.14159265);
-
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    // Clamp minimum depth so no particle blows up to huge size on first frame
-    gl_PointSize = aSize * (300.0 / max(-mvPosition.z, 4.0));
-    gl_Position  = projectionMatrix * mvPosition;
-  }
-`;
-
-const FRAG = /* glsl */ `
-  uniform vec3  uColor;
-  uniform float uIntensity;
-  uniform float uArmSharpness;   // how tight the arms are (higher = thinner)
-  uniform float uArmFalloff;     // radial falloff along each arm
-  uniform float uGlowRadius;     // central glow radius (higher = tighter)
-
-  varying float vAlpha;
-
-  void main() {
-    // gl_PointCoord: [0,1]² → remap to [-1,1]²
-    vec2 uv = gl_PointCoord * 2.0 - 1.0;
-
-    // Horizontal arm: sharp in Y, gradual in X
-    float hArm = exp(-abs(uv.y) * uArmSharpness) * exp(-abs(uv.x) * uArmFalloff);
-    // Vertical arm: sharp in X, gradual in Y
-    float vArm = exp(-abs(uv.x) * uArmSharpness) * exp(-abs(uv.y) * uArmFalloff);
-    // Central radial glow
-    float glow = exp(-length(uv) * uGlowRadius);
-
-    float star = max(max(hArm, vArm), glow);
-
-    if (star < 0.005) discard;
-
-    gl_FragColor = vec4(uColor * uIntensity, star * vAlpha);
-  }
-`;
-
 export default function WaterSparkles() {
-  // ── Leva controls ──────────────────────────────────────────────────────────
   const {
     count,
     spread,
@@ -80,30 +34,7 @@ export default function WaterSparkles() {
     armSharpness,
     armFalloff,
     glowRadius,
-  } = useControls(
-    "Water Sparkles",
-    {
-      count:    { value: 100,  min: 0,   max: MAX_COUNT, step: 1,   label: "Count" },
-      spread:   { value: 40,  min: 5,   max: 120,       step: 1,   label: "Spread Radius" },
-      heightOffset: { value: 0.97, min: 0, max: 2,      step: 0.01, label: "Height Offset" },
-      Size: folder({
-        minSize: { value: 3,  min: 1,   max: 150,       step: 1,   label: "Min Size" },
-        maxSize: { value: 6,  min: 1,   max: 300,       step: 1,   label: "Max Size" },
-      }, { collapsed: false }),
-      Lifetime: folder({
-        minLife: { value: 0.7, min: 0.1, max: 10,        step: 0.1, label: "Min Life (s)" },
-        maxLife: { value: 2.8, min: 0.1, max: 15,        step: 0.1, label: "Max Life (s)" },
-      }, { collapsed: false }),
-      Appearance: folder({
-        color:       { value: "#e5d2d2",                              label: "Color" },
-        intensity:   { value: 1.8,  min: 0.1, max: 15,  step: 0.1,  label: "Intensity" },
-        armSharpness:{ value: 27.0, min: 1,   max: 40,  step: 0.5,  label: "Arm Sharpness" },
-        armFalloff:  { value: 4.8,  min: 0.1, max: 8,   step: 0.1,  label: "Arm Falloff" },
-        glowRadius:  { value: 12,  min: 0.5, max: 12,  step: 0.1,  label: "Glow Radius" },
-      }, { collapsed: true }),
-    },
-    { collapsed: true }
-  );
+  } = useWaterSparklesControls();
 
   // ── CPU particle data (typed arrays, never recreated) ─────────────────────
   const posArr     = useMemo(() => new Float32Array(MAX_COUNT * 3), []);

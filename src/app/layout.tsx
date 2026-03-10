@@ -5,8 +5,8 @@ import Footer from "@/components/overlay/Footer";
 
 
 export const metadata: Metadata = {
-  title: "3D Playground",
-  description: "Unity-style 3D playground built with R3F",
+  title: "Anime Water Shader",
+  description: "Anime style water in R3F",
 };
 
 export default function RootLayout({

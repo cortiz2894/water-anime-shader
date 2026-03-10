@@ -21,6 +21,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "three": "^0.182.0",
+    "three-stdlib": "^2.36.1",
     "unicornstudio-react": "^1.5.2"
   },
   "devDependencies": {
