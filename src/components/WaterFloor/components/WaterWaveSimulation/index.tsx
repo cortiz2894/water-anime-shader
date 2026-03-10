@@ -4,6 +4,7 @@ import { useRef, useMemo, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { waterObjectsRegistry } from "../../stores/waterObjectsRegistry";
+import { debugStore } from "../../stores/debugStore";
 import { INJ_VERT, INJ_FRAG } from "./shaders/injection";
 import { WAVE_VERT, WAVE_FRAG } from "./shaders/wave";
 import { DISP_VERT, DISP_FRAG } from "./shaders/display";
@@ -271,6 +272,10 @@ export default function WaterWaveSimulation() {
       displayRef.current.position.x = camera.position.x;
       displayRef.current.position.z = camera.position.z;
     }
+
+    // Expose textures for debug overlay
+    debugStore.injectionTexture = injRT.texture;
+    debugStore.waveTexture      = waveRTs[pingIdx.current].texture;
   });
 
   return (

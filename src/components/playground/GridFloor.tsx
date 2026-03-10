@@ -11,6 +11,7 @@ import WaterSparkles from "../WaterFloor/components/WaterSparkles";
 import ShadowCatcher from "../WaterFloor/components/ShadowCatcher";
 import WaterDepthIntersection from "../WaterFloor/components/WaterDepthIntersection";
 import WaterWaveSimulation from "../WaterFloor/components/WaterWaveSimulation";
+import WaterDebugOverlay from "../WaterFloor/components/WaterDebugOverlay";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,6 +153,7 @@ export default function GridFloor({
       <WaterSparkles />
       <WaterDepthIntersection />
       <WaterWaveSimulation />
+      {/* <WaterDebugOverlay /> */}
     </>
   );
 
