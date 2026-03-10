@@ -7,6 +7,9 @@ This repository showcases a real-time stylized water system inspired by Blender'
 ![Three.js](https://img.shields.io/badge/Three.js-0.182-black?style=flat-square&logo=three.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 
+---
+
+Breakdown and "How to use" [Youtube Video](https://youtu.be/v5YoO8gPYPQ)
 
 ---
 
